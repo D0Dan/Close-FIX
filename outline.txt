@@ -1,0 +1,4 @@
+ micro FIX languae in C -- convert plaintext to FIX message
+
+Parts: 
+	-one empty function (set manditory variable - key pars)
