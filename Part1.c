@@ -1,10 +1,23 @@
 #include<stdio.h>
 
+//TODO ->
+//error handeling
+//migrate to Patr1.h?
+
+
 // structure to store FIX instruction encoding 
-struct pair {
-	int key;
-	char value[64];
-};
+//struct pair {
+//	int key;
+//	char value[64];
+//};
+
+//temp function for debug
+void printInRange(char* input, int startFlag, int endFlag){
+	for (int i = startFlag; i >= endFlag; i++)
+		printf("%c", input[i]);
+	return;
+}
+
 
 void main(int argc, char** argv){
 
@@ -16,13 +29,13 @@ void main(int argc, char** argv){
 	inputFile = fopen("input.txt", "r");
 	fscanf(inputFile, "%s", &input);
 	printf("Read input: %s", input);
-	fclose("input.txt");
+	fclose(inputFile);
 
 	//distinguish charecter from key-word
 	//Logon(34=56) -> Logon [key] 34=56 [value]
 	//Part1 -> assuming empty values !!!restriction!!!
 	
-	//find the sum of letters in assci of mesage
+	//find the sum of letters in assci of mesag
 	//find start and end of content in brackets 
 	int messageType = 0;
 	int inputFlag = 0;
@@ -67,9 +80,10 @@ void main(int argc, char** argv){
 			if (inputFlag == 0 || inputFlagClose == 0)
 				printf("no message content");
 			else
-				printf("contents: %s", input[inputFlag::inputFlagClose] );
-		case default:
-			printf("ERORR: messaage bad :(")
+				//TODO print in range native in C , input[12;32]?
+				printInRange(input, inputFlag, inputFlagClose);
+		default:
+			printf("ERORR: messaage bad :(");
 	}
 	
 	return;
