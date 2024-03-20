@@ -11,14 +11,6 @@
 //	char value[64];
 //};
 
-//temp function for debug
-void printInRange(char* input, int startFlag, int endFlag){
-	for (int i = startFlag; i >= endFlag; i++)
-		printf("%c", input[i]);
-	return;
-}
-
-
 void main(int argc, char** argv){
 
 	//Read data from Input.txt into input
@@ -28,7 +20,7 @@ void main(int argc, char** argv){
 
 	inputFile = fopen("input.txt", "r");
 	fscanf(inputFile, "%s", &input);
-	printf("Read input: %s", input);
+	printf("Read input: %s \n", input);
 	fclose(inputFile);
 
 	//distinguish charecter from key-word
@@ -40,13 +32,13 @@ void main(int argc, char** argv){
 	int messageType = 0;
 	int inputFlag = 0;
 	int inputFlagClose = 0;
-	for(int i = 0; input[i] =! '\0'; i ++) {
+	for(int i = 0; i < 64; i ++) {
 		if (input[i] == '('){
 			inputFlag = i;
-			messageType += input[i];
-			for (int j = i; input[j] =! '\0'; j ++)
+			for (int j = i; j < 64; j ++) {
 				if (input[j] == ')')
-					inputFlagClose = j;
+					inputFlagClose = j + 1;
+			}
 			break;
 		}
 		messageType += input[i];
@@ -57,34 +49,50 @@ void main(int argc, char** argv){
 	{
 		case 944:
 			printf("heartbeat");
+			break;
 		case 1225:
 			printf("testrequest");
+			break;
 		case 1418:
 			printf("resendrequest");
+			break;
 		case 637:
 			printf("reject");
+			break;
 		case 1404:
 			printf("sequencereset");
+			break;
 		case 666:
 			printf("logout");
+			break;
 		case 321:
 			printf("ioi");
+			break;
 		case 1403:
 			printf("advertisement");
+			break;
 		case 1648:
 			printf("executionreport");
+			break;
 		case 1791:
 			printf("ordercancelreject");
-		case 543:
+			break;
+		case 511:
 			printf("logon");
-			if (inputFlag == 0 || inputFlagClose == 0)
+			if (inputFlag == 0 || inputFlagClose == 0) {
 				printf("no message content");
-			else
+			}
+			else {
 				//TODO print in range native in C , input[12;32]?
-				printInRange(input, inputFlag, inputFlagClose);
+				for (int i = inputFlag; i < inputFlagClose; i++)
+					printf("%c", input[i]);
+			}
+			break;
 		default:
 			printf("ERORR: messaage bad :(");
+			break;
 	}
 	
+	printf("\n");
 	return;
 }
