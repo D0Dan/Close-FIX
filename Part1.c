@@ -12,7 +12,7 @@
 //};
 
 char ToLowerCase(char n) {
-	if(n =< 90) {
+	if(n <= 90) {
 		return (n + 32);
 	}else {
 		return n;
