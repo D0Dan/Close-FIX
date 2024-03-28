@@ -11,6 +11,14 @@
 //	char value[64];
 //};
 
+char ToLowerCase(char n) {
+	if(n =< 90) {
+		return (n + 32);
+	}else {
+		return n;
+	}
+}
+
 void main(int argc, char** argv){
 
 	//Read data from Input.txt into input
@@ -33,7 +41,8 @@ void main(int argc, char** argv){
 	int inputFlag = 0;
 	int inputFlagClose = 0;
 	for(int i = 0; i < 64; i ++) {
-		if (input[i] == '('){
+
+		if (input[i] == '('){ //start of function input value
 			inputFlag = i;
 			for (int j = i; j < 64; j ++) {
 				if (input[j] == ')')
@@ -41,7 +50,8 @@ void main(int argc, char** argv){
 			}
 			break;
 		}
-		messageType += input[i];
+
+		messageType += ToLowerCase(input[i]); //adding ascii
 	}
 
 	//split to indevidual message types
@@ -77,7 +87,7 @@ void main(int argc, char** argv){
 		case 1791:
 			printf("ordercancelreject");
 			break;
-		case 511:
+		case 543:
 			printf("logon");
 			if (inputFlag == 0 || inputFlagClose == 0) {
 				printf("no message content");
