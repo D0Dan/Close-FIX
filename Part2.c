@@ -10,11 +10,11 @@
 //migrate to Patr1.h?
 
 // structure to store FIX instruction encoding 
-struct FIXComponent {
+typedef struct {
 	int tag[MAX_FIX_TAGS];
 	char value[MAX_FIX_TAGS][MAX_VALUE_LENGTH];
-	int numTags = 0;
-};
+	int numTags;
+} FIXComponent;
 
 //return a LowerCase ascii if its uppercase, if not the original
 char ToLowerCase(char n) {
@@ -32,9 +32,12 @@ int KeyFromName(char* fieldName) {
 }
 
 //print out the FIX message pair by pair
-void ReadFixComponent(FIXComponent message) {
-	for (int i = 0, i < numTags, i++) {
-		printf(" %i = %c \n", message.tag[i], message.value[i]);
+void ReadFIXComponent(FIXComponent message) {
+	for (int i = 0; i < message.numTags; i++) {
+		printf(" %i = ", message.tag[i]);
+		for (int j = 0; j < strlen(message.value[i]); j++)
+			printf("%c", message.value[i][j]);
+		printf(" \n");
 	}
 	return;
 }
@@ -75,7 +78,7 @@ void main(int argc, char** argv){
 	}
 
 	FIXComponent message;
-
+	message.numTags = 0;
 
 	//split to indevidual message types
 	switch(messageType)
@@ -83,83 +86,83 @@ void main(int argc, char** argv){
 		case 944: // HeartBeat 
 			printf("heartbeat\n");
 			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], '0');
+			strcpy(message.value[message.numTags], "0");
 			message.numTags += 1;
 			break;
 		case 1225:
 			printf("testrequest\n");
 			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], '1');
+			strcpy(message.value[message.numTags], "1");
 			message.numTags += 1;
 			break;
 		case 1418:
 			printf("resendrequest\n");
 			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], '2');
+			strcpy(message.value[message.numTags], "2");
 			message.numTags += 1;
 			break;
 		case 637:
 			printf("reject\n");
 			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], '3');
+			strcpy(message.value[message.numTags], "3");
 			message.numTags += 1;
 			break;
 		case 1404:
 			printf("sequencereset\n");
 			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], '4');
+			strcpy(message.value[message.numTags], "4");
 			message.numTags += 1;
 			break;
 		case 666:
 			printf("logout\n");
 			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], '5');
+			strcpy(message.value[message.numTags], "5");
 			message.numTags += 1;
 			break;
 		case 321:
 			printf("ioi\n");
 			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], '6');
+			strcpy(message.value[message.numTags], "6");
 			message.numTags += 1;
 			break;
 		case 1403:
 			printf("advertisement\n");
 			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], '7');
+			strcpy(message.value[message.numTags], "7");
 			message.numTags += 1;
 			break;
 		case 1648:
 			printf("executionreport\n");
 			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], '8');
+			strcpy(message.value[message.numTags], "8");
 			message.numTags += 1;
 			break;
 		case 1791:
 			printf("ordercancelreject\n");
 			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], '9');
+			strcpy(message.value[message.numTags], "9");
 			message.numTags += 1;
 			break;
 		case 543:
 			printf("logon\n"); // add logon value pair to message
 			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], 'A');
-			message.numTags += 1;
-
+			strcpy(message.value[message.numTags], "A");
+			message.numTags ++;
+			
 			if (inputFlag == 0 || inputFlagClose == 0) {
 				break; // empty message, nothing to add
 			}
-
+			
 			//add message content
 			//sycle through input intil '=' or ','
 			int TypeFlag = 0; // 0 for tag, 1 for value
 			int inputFlagTmp = inputFlag;
-			while(inputFlag < inputFlagClose) {
+			while(inputFlagTmp < inputFlagClose) {
 				if (input[inputFlagTmp] == '=')
 					TypeFlag = 1;
 				if (input[inputFlagTmp] == ',')
 					TypeFlag = 0;
-
+				
 				inputFlagTmp += 1;
 			}
 
@@ -169,6 +172,6 @@ void main(int argc, char** argv){
 			break;
 	}
 	
-	ReadFIXMessage(message);
+	ReadFIXComponent(message);
 	return;
 }
