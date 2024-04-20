@@ -1,14 +1,12 @@
 #ifndef FIELDNAMELIST_H
 #define FIELDNAMELIST_H
 
-#define int MAX_FIELD_LENGTH = 32;
-
-struct typedef {
+typedef struct {
 	int tag;
-	char fieldName[MAX_FIELD_LENGTH];
-} FieldName;
+	char fieldName[64];
+}FieldName;
 
-#define FieldName FieldNameList[6051] = {
+FieldName FieldNameList[6051] = {
 	{1,"Account"},
 	{2,"AdvId"},
 	{3,"AdvRefID"},
@@ -6059,10 +6057,7 @@ struct typedef {
 	{43123,"UnderlyingPaymentStreamRateIndex2IDSource"},
 	{50000,"BatchID"},
 	{50001,"BatchTotalMessages"},
-	{50002,"BatchProcessMode"},
-
-}
-
-
+	{50002,"BatchProcessMode"}
+};
 
 #endif

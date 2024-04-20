@@ -1,18 +1,12 @@
 #include<stdio.h>
 #include<string.h>
 
-//FIX tag defaults
-#define MAX_FIX_TAGS 64
-#define MAX_VALUE_LENGTH 128
-#define MAX_MESSAGE_LENGTH 16
-
-//TODO ->
-//migrate to Patr1.h?
+#include"FieldNameList.h"
 
 // structure to store FIX instruction encoding 
-typedef struct {
-	int tag[MAX_FIX_TAGS];
-	char value[MAX_FIX_TAGS][MAX_VALUE_LENGTH];
+typedef struct FIXComponent{
+	int tag[64];
+	char value[64][128];
 	int numTags;
 } FIXComponent;
 
@@ -26,20 +20,59 @@ char ToLowerCase(char n) {
 }
 
 //compare field name to get key value for message
-//5000 unique message types,  have to do someting unique 
-int KeyFromName(char* fieldName) {
-	return 1; //TODO
+int KeyFromName(char* fieldNameUnknown) {
+	for (int i = 0; i < 6051; i++) {
+		if (strcmp(FieldNameList[i].fieldName, fieldNameUnknown) == 0)
+			return FieldNameList[i].tag;
+	}
+	printf("error: field name unmached: %s\n", fieldNameUnknown);
+	return 0;
 }
 
 //print out the FIX message pair by pair
 void ReadFIXComponent(FIXComponent message) {
 	for (int i = 0; i < message.numTags; i++) {
-		printf(" %i = ", message.tag[i]);
-		for (int j = 0; j < strlen(message.value[i]); j++)
-			printf("%c", message.value[i][j]);
-		printf(" \n");
+		printf(" %i = %s \n", message.tag[i], message.value[i]);
 	}
 	return;
+}
+
+//convert string into Fix message components
+void InputComponents(FIXComponent* message, char* input, int inputFlag) {
+	if(inputFlag == 0) {
+		return; // empty message, nothing to add
+	}
+		
+	//add message content
+	//sycle through input intil '=' or ','
+	int TypeFlag = 0; // 0 for tag, 1 for value
+	char inputTmp[32] = {};
+	int indexTmp = 0;
+	for(int i = inputFlag + 1; input[i - 1] != ')'; i++ ) {
+		if (input[i] == '=') { //load chunk as tag
+			message->tag[message->numTags] = KeyFromName(inputTmp);
+
+			memset(inputTmp, 0, indexTmp);
+			indexTmp = 0;
+			TypeFlag = 1;
+			continue;
+		}
+		if (input[i] == ',' || input[i] == ')') { //load chunk as value
+			strcpy(message->value[message->numTags], inputTmp);
+			message->numTags ++;
+
+			memset(inputTmp, 0, indexTmp);
+			indexTmp = 0;
+			TypeFlag = 0;
+			continue;
+		}
+		if(input[i] == ' ') 
+			continue;
+
+		//add a charecter to chunk
+		inputTmp[indexTmp] = input[i];			
+		indexTmp ++;
+	}
 }
 
 void main(int argc, char** argv){
@@ -47,10 +80,10 @@ void main(int argc, char** argv){
 	//Read data from Input.txt into input
 	char filename[] = "input.txt";
 	FILE *inputFile;
-	char input[128];
+	char input[360];
 
 	inputFile = fopen("input.txt", "r");
-	fscanf(inputFile, "%s", &input);
+	fgets(input, 360, inputFile);
 	printf("Read input: %s \n", input);
 	fclose(inputFile);
 
@@ -62,15 +95,9 @@ void main(int argc, char** argv){
 	//find start and end of content in brackets 
 	int messageType = 0;
 	int inputFlag = 0; // 0 for no input, # for '('
-	int inputFlagClose = 0; // 0 of rno input, # for ')'
 	for(int i = 0; i < 64; i ++) {
-
 		if (input[i] == '('){ //start of function input value
 			inputFlag = i;
-			for (int j = i; j < 64; j ++) {
-				if (input[j] == ')')
-					inputFlagClose = j + 1;
-			}
 			break;
 		}
 
@@ -78,100 +105,113 @@ void main(int argc, char** argv){
 	}
 
 	FIXComponent message;
-	message.numTags = 0;
+	message.tag[0] = 8;
+	strcpy(message.value[0], "FIX.4.2");
+	message.numTags = 3;
 
 	//split to indevidual message types
 	switch(messageType)
 	{
 		case 944: // HeartBeat 
 			printf("heartbeat\n");
-			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], "0");
-			message.numTags += 1;
+			message.tag[2] = 35;
+			strcpy(message.value[2], "0");
+
+			InputComponents(&message, input, inputFlag);
+
 			break;
 		case 1225:
 			printf("testrequest\n");
-			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], "1");
-			message.numTags += 1;
+			message.tag[2] = 35;
+			strcpy(message.value[2], "1");
+
+			InputComponents(&message, input, inputFlag);
+
 			break;
 		case 1418:
 			printf("resendrequest\n");
-			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], "2");
-			message.numTags += 1;
+			message.tag[2] = 35;
+			strcpy(message.value[2], "2");
+
+			InputComponents(&message, input, inputFlag);
+
 			break;
 		case 637:
 			printf("reject\n");
-			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], "3");
-			message.numTags += 1;
+			message.tag[2] = 35;
+			strcpy(message.value[2], "3");
+
+			InputComponents(&message, input, inputFlag);
+
 			break;
 		case 1404:
 			printf("sequencereset\n");
-			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], "4");
-			message.numTags += 1;
+			message.tag[2] = 35;
+			strcpy(message.value[2], "4");
+
+			InputComponents(&message, input, inputFlag);
+
 			break;
 		case 666:
 			printf("logout\n");
-			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], "5");
-			message.numTags += 1;
+			message.tag[2] = 35;
+			strcpy(message.value[2], "5");
+
+			InputComponents(&message, input, inputFlag);
+
 			break;
 		case 321:
 			printf("ioi\n");
-			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], "6");
-			message.numTags += 1;
+			message.tag[2] = 35;
+			strcpy(message.value[2], "6");
+
+			InputComponents(&message, input, inputFlag);
+
 			break;
 		case 1403:
 			printf("advertisement\n");
-			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], "7");
-			message.numTags += 1;
+			message.tag[2] = 35;
+			strcpy(message.value[2], "7");
+
+			InputComponents(&message, input, inputFlag);
+
 			break;
 		case 1648:
 			printf("executionreport\n");
-			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], "8");
-			message.numTags += 1;
+			message.tag[2] = 35;
+			strcpy(message.value[2], "8");
+
+			InputComponents(&message, input, inputFlag);
+			
 			break;
 		case 1791:
 			printf("ordercancelreject\n");
-			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], "9");
-			message.numTags += 1;
+			message.tag[2] = 35;
+			strcpy(message.value[2], "9");
+
+			InputComponents(&message, input, inputFlag);
+
 			break;
 		case 543:
 			printf("logon\n"); // add logon value pair to message
-			message.tag[message.numTags] = 8;
-			strcpy(message.value[message.numTags], "A");
-			message.numTags ++;
-			
-			if (inputFlag == 0 || inputFlagClose == 0) {
-				break; // empty message, nothing to add
-			}
-			
-			//add message content
-			//sycle through input intil '=' or ','
-			int TypeFlag = 0; // 0 for tag, 1 for value
-			int inputFlagTmp = inputFlag;
-			while(inputFlagTmp < inputFlagClose) {
-				if (input[inputFlagTmp] == '=')
-					TypeFlag = 1;
-				if (input[inputFlagTmp] == ',')
-					TypeFlag = 0;
-				
-				inputFlagTmp += 1;
-			}
+			message.tag[2] = 35;
+			strcpy(message.value[2], "A");
+
+			InputComponents(&message, input, inputFlag);
 
 			break;
 		default:
 			printf("ERORR: messaage bad :(");
 			break;
 	}
-	
+
+	//adding Checksum component
+	message.tag[message.numTags] = 10;
+	strcpy(message.value[message.numTags] , "Checksum");
+	message.numTags ++;
+	//adding BodyLength component 
+	message.tag[1] = 9;
+	strcpy(message.value[1] , "BodyLength");
 	ReadFIXComponent(message);
 	return;
 }
