@@ -3,10 +3,61 @@
 
 typedef struct {
 	int tag;
-	char fieldName[64];
-}FieldName;
+	char name[64];
+} field_name_t;
 
-FieldName FieldNameList[6051] = {
+//after 9, into -> char
+field_name_t message_name_list[] = {
+	{0,"Heartbeat"},
+	{1,"TestRequest"},
+	{2,"ResendRequest"},
+	{3,"Reject"},
+	{4,"SequenceReset"},
+	{5,"Logout"},
+	{6,"IOI"},
+	{7,"Advertisement"},
+	{8,"ExecutionReport"},
+	{9,"OrderCancelReject"},
+	{65,"Logon"},
+	{66,"News"},
+	{67,"Email"},
+	{68,"OrderSingle"},
+	{69,"OrderList"},
+	{70,"OrderCancelRequest"},
+	{71,"OrderCancelReplaceRequest"},
+	{72,"OrderStatusRequest"},
+	{74,"Allocation"},
+	{75,"ListCancelRequest"},
+	{76,"ListExecute"},
+	{77,"ListStatusRequest"},
+	{78,"ListStatus"},
+	{80,"AllocationInstructionAck"},
+	{81,"DontKnowTrade"},
+	{82,"QuoteRequest"},
+	{83,"Quote"},
+	{84,"SettlementInstructions"},
+	{86,"MarketDataRequest"},
+	{87,"MarketDataSnapshotFullRefresh"},
+	{88,"MarketDataIncrementalRefresh"},
+	{89,"MarketDataRequestReject"},
+	{90,"QuoteCancel"},
+	{97,"QuoteStatusRequest"},
+	{98,"QuoteAcknowledgement"},
+	{99,"SecurityDefinitionRequest"},
+	{100,"SecurityDefinition"},
+	{101,"SecurityStatusRequest"},
+	{102,"SecurityStatus"},
+	{103,"TradingSessionStatusRequest"},
+	{104,"TradingSessionStatus"},
+	{105,"MassQuote"},
+	{106,"BusinessMessageReject"},
+	{107,"BidRequest"},
+	{108,"BidResponse"},
+	{109,"ListStrikePrice"},
+	{ 0 , '0'}
+};
+
+field_name_t field_name_list[] = {
 	{1,"Account"},
 	{2,"AdvId"},
 	{3,"AdvRefID"},
@@ -6057,7 +6108,8 @@ FieldName FieldNameList[6051] = {
 	{43123,"UnderlyingPaymentStreamRateIndex2IDSource"},
 	{50000,"BatchID"},
 	{50001,"BatchTotalMessages"},
-	{50002,"BatchProcessMode"}
+	{50002,"BatchProcessMode"},
+	{0, "0"}
 };
 
 #endif
