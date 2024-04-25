@@ -1,23 +1,23 @@
 #ifndef FIELDNAMELIST_H
 #define FIELDNAMELIST_H
-
+//#include "field_name_t.c"
 typedef struct {
 	int tag;
 	char name[64];
 } field_name_t;
 
-//after 9, into -> char
+//tag: int -> char
 field_name_t message_name_list[] = {
-	{0,"Heartbeat"},
-	{1,"TestRequest"},
-	{2,"ResendRequest"},
-	{3,"Reject"},
-	{4,"SequenceReset"},
-	{5,"Logout"},
-	{6,"IOI"},
-	{7,"Advertisement"},
-	{8,"ExecutionReport"},
-	{9,"OrderCancelReject"},
+	{48,"Heartbeat"},
+	{49,"TestRequest"},
+	{50,"ResendRequest"},
+	{51,"Reject"},
+	{52,"SequenceReset"},
+	{53,"Logout"},
+	{54,"IOI"},
+	{55,"Advertisement"},
+	{56,"ExecutionReport"},
+	{57,"OrderCancelReject"},
 	{65,"Logon"},
 	{66,"News"},
 	{67,"Email"},

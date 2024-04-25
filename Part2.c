@@ -3,107 +3,91 @@
 
 #include"FieldNameList.h"
 
+// struct to store FIX tag - value pairs
+typedef struct {
+	int tag;
+	char value[64];
+} field_t;
+
 // structure to store FIX instruction encoding 
-typedef struct FIX_component{
-	int tag[64];
-	char value[64][128];
-	int num_tags;
-} FIX_component;
+typedef struct {
+	field_t fields[64];
+	int num_fields;
+} message_t;
 
-//structure to store Field names, Messagenames
-//typedef struct {
-//    int tag;
-//    char name[64];
-//} field_name_t;
-
-extern field_name_t field_name_list[];
-
-extern field_name_t message_name_list[];
-
-//return a LowerCase ascii if its uppercase, if not the original
-//char to_lower_case(char n) {
-//	if(n <= 90 && n >= 65) {
-//		return (n + 32);
-//	}else {
-//		return n;
-//	}
-//}
-
-//compare field name to get key value for message
-int key_from_name(char* field_name_unknown, char type) {
-	if (type == 't') {
-		for (int i = 0; field_name_list[i].name != '0' || field_name_list[i].tag != 0; i++) {
-			if (strcmp(field_name_list[i].name, field_name_unknown) == 0)
-				return field_name_list[i].tag;
-		}
-		printf("error: field name unmached: %s\n", field_name_unknown);
-	} else if (type == 'c') {
-		for (int i = 0; message_name_list[i].name != 0 || message_name_list[i].tag != 0; i++) {
-			if (strcmp(message_name_list[i].name, field_name_unknown) == 0)
-				return message_name_list[i].tag;
-		}
-		printf("error: message name unmached: %s\n", field_name_unknown);
+//compare message types to get message key
+char message_type_from_name(char* message_name_unknown) {
+	for (int i = 0; message_name_list[i].tag != 0; i++) {
+		if (strcmp(message_name_list[i].name, message_name_unknown) == 0)
+			return message_name_list[i].tag;
 	}
-	printf("error: unreachebale in key_from_name!: invalid type");
+	printf("error: message name unmached: %s\n", message_name_unknown);
+	return '0';
+}
+//compare field name to get key value for message
+int key_from_name(char* field_name_unknown) {
+	for (int i = 0; field_name_list[i].name != 0; i++) {
+		if (strcmp(field_name_list[i].name, field_name_unknown) == 0)
+			return field_name_list[i].tag;
+	}
+	printf("error: field name unmached: %s\n", field_name_unknown);
 	return 0;
 }
 
 //print out the FIX message pair by pair
-void read_FIX_component(FIX_component message) {
-	for (int i = 0; i < message.num_tags; i++) {
-		printf(" %i = %s \n", message.tag[i], message.value[i]);
+void read_FIX_component(message_t message) {
+	for (int i = 0; i < message.num_fields; i++) {
+		printf(" %i = %s \n", message.fields[i].tag, message.fields[i].value);
 	}
 	return;
 }
 
 //convert string into Fix message components
-void input_components(FIX_component* message, char* input, int input_flag) {
-
-	//add version decalration
-	message->tag[0] = 8;
-	strcpy(message->value[0], "FIX.4.2");	
-
-	//add message type
-	char message_tmp[32];
-	memcpy(message_tmp, input, input_flag);
-	printf("message: %s \n", message_tmp);
-	message->tag[2] = 35;
-	strcpy(message->value[2], key_from_name(message_tmp, 'm'));
-
+void input_components(message_t* message, char* input) {
 	
-	if(input_flag == 0) {
-		return; // empty message, nothing to add
-	}
-		
-	//add message content
-	//sycle through input intil '=' or ','
-	int type_flag = 0; // 0 for tag, 1 for value
-	char input_tmp[32] = {};
-	int index_tmp = 0;
-	for(int i = input_flag + 1; input[i - 1] != ')'; i++ ) {
-		if (input[i] == '=') { //load chunk as tag
-			message->tag[message->num_tags] = key_from_name(input_tmp, 't');
+		//find message type
+	//locator pointer
+	char *message_p = input;
+	
+	//cycle until end of message declaration
+	while (*message_p != '\0' && *message_p != '(')
+		message_p++;
+	//if p != ( error TODO
+	
+	char message_type[32];
+	strncpy(message_type, input, (message_p - input));
 
-			memset(input_tmp, 0, index_tmp);
-			index_tmp = 0;
-			type_flag = 1;
+	//input message type field
+	message->fields[2].tag = 8;
+	message->fields[2].value[0] = message_type_from_name(message_type);
+
+		//find message contents
+	//sycle through input until '=' or ','
+	//int type_flag = 0; // 0 for tag, 1 for value // for error handeling TODO
+	char tmp[32];
+	while (*message_p != '\0' && *message_p != ')') {
+		if (*message_p == '=') { //load chunk as tag
+			message->fields[message->num_fields].tag = key_from_name(tmp);
+
+			memset(tmp, 0, strlen(tmp));
+			message_p++;
 			continue;
 		}
-		if (input[i] == ',' || input[i] == ')') { //load chunk as value
-			strcpy(message->value[message->num_tags], input_tmp);
-			message->num_tags ++;
+		if (*message_p == ',') { //load chunk as value
+			strcpy(message->fields[message->num_fields].value, tmp);
+			message->num_fields ++;
 
-			memset(input_tmp, 0, index_tmp);
-			index_tmp = 0;
-			type_flag = 0;
+			memset(tmp, 0, strlen(tmp));
+			message_p++;
 			continue;
 		}
-		if(input[i] == ' ') 
+		if(*message_p == ' ') 
+			message_p++;
 			continue;
 
-		//add a charecter to chunk
-		input_tmp[index_tmp] = input[i];			
-		index_tmp ++;
+		//advence pointer
+		strncat(tmp, message_p, 1);
+		message_p ++;
 	}
 }
 
@@ -114,31 +98,17 @@ void main(int argc, char** argv){
 	FILE *inputFile;
 	char input[360];
 
-	inputFile = fopen("input.txt", "r");
+	//TODO read input function
+	inputFile = fopen("input.txt", "r"); 
 	fgets(input, 360, inputFile);
 	printf("Read input: %s \n", input);
 	fclose(inputFile);
 
-	//distinguish charecter from key-word
-	//Logon(34=56) -> Logon [key] 34=56 [value]
-	//Part2 -> assuming one input ignore it, print defaults for message !!!restriction
-	
-	//find start and end of content in brackets 
-	int input_flag = 0; // 0 for no input, # for '('
-	for(int i = 0; i < 64; i ++) {
-		if (input[i] == '('){ //start of function input value
-			input_flag = i;
-			break;
-		}
-	}
+	message_t message;
+	input_components(&message, input);
 
-	FIX_component message;
-	message.num_tags = 3;
-	input_components(&message, input, input_flag);
-
-
-	//split to indevidual message types
-	switch(message.value[2] - '0') // [2] is message type
+	//split to indevidual message types //TODO
+	switch(message.fields[2].value[0]) // [2] is message type
 	{
 		case '0':
 			printf("heartbeat\n");
@@ -189,13 +159,5 @@ void main(int argc, char** argv){
 			break;
 	}
 
-	//adding Checksum component
-	message.tag[message.num_tags] = 10;
-	strcpy(message.value[message.num_tags] , "Checksum");
-	message.num_tags ++;
-	//adding BodyLength component 
-	message.tag[1] = 9;
-	strcpy(message.value[1] , "BodyLength");
-	read_FIX_component(message);
 	return;
 }
