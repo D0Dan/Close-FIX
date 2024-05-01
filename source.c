@@ -17,30 +17,32 @@ typedef struct {
 	int num_fields;
 } message_t;
 
-int read_file_to_string(const char* file_name, char *buffer, int buffer_size) {
-
-	FILE input_file = fopen(filed_name, "r"); 
-
-	//getting file information
-	struct stat file_stats;
-	
-	if (stat(input_file, &file_stats) == -1) {
-		perror("Error reading file");
-		return 1;
-	}
-	
-	//check if buffer allocated is big enough
-	if (file_stats.st_size > buffer_size) {
-		perror("File too bit for buffer space allocated");
-		return 1;
-	}
-	
-	//inputing contents to buffer
-	int bytes_read  = fread(buffer, file_stats.st_size, 1 ,input_file);
-
-	fclose(input_file);
-	return bytes_read;
-}
+//TODO unknown error after executuion -> stall
+//int read_file_to_string(const char* file_name, char *buffer, int buffer_size) {
+//
+//	FILE* input_file = fopen(file_name, "r"); 
+//
+//	//getting file information
+//	struct stat file_stats;
+//	
+//	if (stat(file_name, &file_stats) == -1) {
+//		printf("Failed to open file");
+//		return 1;
+//	}
+//	
+//	//check if buffer allocated is big enough
+//	if (file_stats.st_size > buffer_size) {
+//		printf("File too bit for buffer space allocated");
+//		return 1;
+//	}
+//	
+//	//inputing contents to buffer
+//	int bytes_read  = fread(buffer, file_stats.st_size, 1 ,input_file);
+//
+//	fclose(input_file);
+//	printf("file size: %i, byte_size: %i\n", file_stats.st_size, bytes_read);
+//	return bytes_read;
+//}
 
 
 //compare message types to get message key
@@ -74,39 +76,50 @@ void read_FIX_component(message_t message) {
 void input_components(message_t* message, char* input) {
 	
 		//find message type
-	//locator pointer
-	char *message_p = input;
-	
+	char* message_p = input;
+
 	//cycle until end of message declaration
-	while (*message_p != '\0' && *message_p != '(')
+	while (*message_p != '\0' && *message_p != '(') {
+		printf("%c\n", *message_p);
 		message_p++;
+	}
 	//if p != ( error TODO
 	
-	char message_type[32];
+	char message_type[32] = {0};
 	strncpy(message_type, input, (message_p - input));
 
 	//input message type field
 	message->fields[2].tag = 8;
 	message->fields[2].value[0] = message_type_from_name(message_type);
+	printf("%s, %i\n", message_type, message->fields[2].tag);
 
 		//find message contents
 	//sycle through input until '=' or ','
 	//int type_flag = 0; // 0 for tag, 1 for value // for error handeling TODO
-	char tmp[32];
+	char* message_back_p = message_p;
+		printf("%c\n", message_p);
 	while (*message_p != '\0' && *message_p != ')') {
+		printf("%c\n", message_p);
 		if (*message_p == '=') { //load chunk as tag
+			char tmp[32] = {0};
+			strncpy(tmp, message_p, (message_p - message_back_p));
 			message->fields[message->num_fields].tag = key_from_name(tmp);
+		
 
 			memset(tmp, 0, strlen(tmp));
 			message_p++;
+			message_back_p = message_p;
 			continue;
 		}
 		if (*message_p == ',') { //load chunk as value
+			char tmp[32] = {0};
+			strncpy(tmp, message_p, (message_p - message_back_p));
 			strcpy(message->fields[message->num_fields].value, tmp);
 			message->num_fields ++;
 
 			memset(tmp, 0, strlen(tmp));
 			message_p++;
+			message_back_p = message_p;
 			continue;
 		}
 		if(*message_p == ' ') 
@@ -114,7 +127,6 @@ void input_components(message_t* message, char* input) {
 			continue;
 
 		//advence pointer
-		strncat(tmp, message_p, 1);
 		message_p ++;
 	}
 }
@@ -123,14 +135,20 @@ void main(int argc, char** argv){
 
 	//Read data from Input.txt into input
 	char filename[] = "input.txt";
-	int input_size = 360;
-	char input[360];
+	int input_size = 254;
+	char input[254];
 
 	// read file contents into input, return lenght of contents
-	int message_length = read_file_to_string(filename, input, input_size);
+	//int message_length = read_file_to_string(filename, &input[0], input_size);
+	
+	FILE *input_file;
+	input_file = fopen(filename, "r");
+	fgets(input, input_size, input_file);
+	fclose(input_file);
+	printf("read from %s: %s\n", filename, input);
 
 	message_t message;
-	input_components(&message, input);
+	input_components(&message, &input[0]);
 
 	//split to indevidual message types //TODO
 	switch(message.fields[2].value[0]) // [2] is message type
