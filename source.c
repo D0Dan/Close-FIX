@@ -1,5 +1,7 @@
 #include<stdio.h>
+#include<stdlib.h>
 #include<string.h>
+#include<sys/stat.h>
 
 #include"field_name_list.h"
 
@@ -14,6 +16,32 @@ typedef struct {
 	field_t fields[64];
 	int num_fields;
 } message_t;
+
+int read_file_to_string(const char* file_name, char *buffer, int buffer_size) {
+
+	FILE input_file = fopen(filed_name, "r"); 
+
+	//getting file information
+	struct stat file_stats;
+	
+	if (stat(input_file, &file_stats) == -1) {
+		perror("Error reading file");
+		return 1;
+	}
+	
+	//check if buffer allocated is big enough
+	if (file_stats.st_size > buffer_size) {
+		perror("File too bit for buffer space allocated");
+		return 1;
+	}
+	
+	//inputing contents to buffer
+	int bytes_read  = fread(buffer, file_stats.st_size, 1 ,input_file);
+
+	fclose(input_file);
+	return bytes_read;
+}
+
 
 //compare message types to get message key
 char message_type_from_name(char* message_name_unknown) {
@@ -95,14 +123,11 @@ void main(int argc, char** argv){
 
 	//Read data from Input.txt into input
 	char filename[] = "input.txt";
-	FILE *inputFile;
+	int input_size = 360;
 	char input[360];
 
-	//TODO read input function
-	inputFile = fopen("input.txt", "r"); 
-	fgets(input, 360, inputFile);
-	printf("Read input: %s \n", input);
-	fclose(inputFile);
+	// read file contents into input, return lenght of contents
+	int message_length = read_file_to_string(filename, input, input_size);
 
 	message_t message;
 	input_components(&message, input);
