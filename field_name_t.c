@@ -1,12 +1,8 @@
-#ifndef FIELDNAMELIST_H
-#define FIELDNAMELIST_H
-//#include "field_name_t.c"
 typedef struct {
 	int tag;
 	char name[64];
 } field_name_t;
 
-//tag: int -> char
 field_name_t message_name_list[] = {
 	{48,"Heartbeat"},
 	{49,"TestRequest"},
@@ -54,7 +50,7 @@ field_name_t message_name_list[] = {
 	{107,"BidRequest"},
 	{108,"BidResponse"},
 	{109,"ListStrikePrice"},
-	{ 0 , '0'}
+	{ 0 , 0}
 };
 
 field_name_t field_name_list[] = {
@@ -6109,7 +6105,5 @@ field_name_t field_name_list[] = {
 	{50000,"BatchID"},
 	{50001,"BatchTotalMessages"},
 	{50002,"BatchProcessMode"},
-	{0, "0"}
+	{0, 0}
 };
-
-#endif
