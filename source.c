@@ -47,7 +47,7 @@ typedef struct {
 
 //compare message types to get message key
 char message_type_from_name(char* message_name_unknown) {
-	for (int i = 0; message_name_list[i].tag != 0; i++) {
+	for (int i = 0; message_name_list[i].tag != 0 && message_name_list[i].name != 0; i++) {
 		if (strcmp(message_name_list[i].name, message_name_unknown) == 0)
 			return message_name_list[i].tag;
 	}
@@ -56,7 +56,7 @@ char message_type_from_name(char* message_name_unknown) {
 }
 //compare field name to get key value for message
 int key_from_name(char* field_name_unknown) {
-	for (int i = 0; field_name_list[i].name != 0; i++) {
+	for (int i = 0; field_name_list[i].name != 0 && field_name_list[i].tag != 0; i++) {
 		if (strcmp(field_name_list[i].name, field_name_unknown) == 0)
 			return field_name_list[i].tag;
 	}
@@ -80,7 +80,6 @@ void input_components(message_t* message, char* input) {
 
 	//cycle until end of message declaration
 	while (*message_p != '\0' && *message_p != '(') {
-		printf("%c\n", *message_p);
 		message_p++;
 	}
 	//if p != ( error TODO
@@ -91,42 +90,45 @@ void input_components(message_t* message, char* input) {
 	//input message type field
 	message->fields[2].tag = 8;
 	message->fields[2].value[0] = message_type_from_name(message_type);
-	printf("%s, %i\n", message_type, message->fields[2].tag);
 
 		//find message contents
 	//sycle through input until '=' or ','
-	//int type_flag = 0; // 0 for tag, 1 for value // for error handeling TODO
-	char* message_back_p = message_p;
-		printf("%c\n", message_p);
+	int type_flag = 0; // 0 for tag, 1 for value // for error handeling TODO
+	char tmp[32] = {0};
+	message_p ++;
 	while (*message_p != '\0' && *message_p != ')') {
-		printf("%c\n", message_p);
 		if (*message_p == '=') { //load chunk as tag
-			char tmp[32] = {0};
-			strncpy(tmp, message_p, (message_p - message_back_p));
+			if (type_flag != 0) {
+				printf("Error: Missmached value pairs");
+				break;
+			}
 			message->fields[message->num_fields].tag = key_from_name(tmp);
-		
 
 			memset(tmp, 0, strlen(tmp));
 			message_p++;
-			message_back_p = message_p;
+			type_flag = 1; // expect value next
 			continue;
 		}
 		if (*message_p == ',') { //load chunk as value
-			char tmp[32] = {0};
-			strncpy(tmp, message_p, (message_p - message_back_p));
+			if (type_flag != 1) {
+				printf("Error: Missmached value pairs");
+				break;
+			}
 			strcpy(message->fields[message->num_fields].value, tmp);
 			message->num_fields ++;
 
 			memset(tmp, 0, strlen(tmp));
 			message_p++;
-			message_back_p = message_p;
+			type_flag = 0; //expect tag next
 			continue;
 		}
-		if(*message_p == ' ') 
+		if(*message_p == ' ') { 
 			message_p++;
 			continue;
-
+		}
+		
 		//advence pointer
+		strncat(tmp, message_p, 1);
 		message_p ++;
 	}
 }
@@ -148,6 +150,8 @@ void main(int argc, char** argv){
 	printf("read from %s: %s\n", filename, input);
 
 	message_t message;
+	message.num_fields = 2; //leaving room for Begin-String Body_Length
+
 	input_components(&message, &input[0]);
 
 	//split to indevidual message types //TODO
@@ -201,6 +205,22 @@ void main(int argc, char** argv){
 			printf("ERORR: messaage bad :(");
 			break;
 	}
+	
+	//get Brgin-String
+	message.fields[0].tag = 8; 
+	strcpy(message.fields[0].value, "FIX.4.2");
+
+	//get Body-Length
+	message.fields[1].tag = 9; 
+		//count message length
+		int message_length = 0;
+		char message_length_string[16];
+		for (int i = 2; i < message.num_fields; i++) 
+			message_length += (sizeof(message.fields[i].tag) + sizeof(message.fields[i].value)); //TODO in C bytes on 84x, not in octeves
+		sprintf(message_length_string, "%d", message_length);											     
+	strcpy(message.fields[1].value, message_length_string);
+
+	read_FIX_component(message);
 
 	return;
 }
